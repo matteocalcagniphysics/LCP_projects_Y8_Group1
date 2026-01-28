@@ -4,7 +4,7 @@ import numpy as np
 np.random.seed(200)
 
 #Number of rows and columns of the GoL grid
-nrows, ncols = 10, 10
+nrows, ncols = 20, 8
 
 #Generates randomly the initial distribution (seed)
 cells = np.random.choice(a=[True, False], size=(nrows, ncols)) 
