@@ -5,9 +5,6 @@ def cellgen(nrows: int, ncols: int):
     #Fixes the seed for replicability
     np.random.seed(200)
 
-    #Number of rows and columns of the GoL grid
-    nrows, ncols = 10, 10
-
     #Generates randomly the initial distribution (seed)
     cells = np.random.choice(a=[True, False], size=(nrows, ncols)) 
 
@@ -48,4 +45,5 @@ def newgen(cells: npt.NDArray[np.bool_], alive_idx: npt.NDArray[np.intp], dead_i
 
 cells, alive, dead = cellgen(10, 8)
 new = newgen(cells, alive, dead)
-print(new)
+print(new, '\n\n')
+print(new.shape)
