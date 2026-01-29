@@ -8,15 +8,15 @@ def cellgen(nrows: int, ncols: int):
     #Generates randomly the initial distribution (seed)
     cells = np.random.choice(a=[True, False], size=(nrows, ncols)) 
 
+    return cells
+
+def newgen(cells: npt.NDArray[np.bool_]):
+    #This create a wrapped surface, where top is identified with bottom and left with right
+    padded = np.pad(cells, pad_width=1, mode='wrap')
+    
     #Extracts the indexes of living cells (True) and dead cells (False)
     alive_idx = np.argwhere(cells == True) 
     dead_idx = np.argwhere(cells == False) 
-
-    return cells, alive_idx, dead_idx
-
-def newgen(cells: npt.NDArray[np.bool_], alive_idx: npt.NDArray[np.intp], dead_idx: npt.NDArray[np.intp]):
-    #This create a wrapped surface, where top is identified with bottom and left with right
-    padded = np.pad(cells, pad_width=1, mode='wrap')
 
     #I add [1, 1] in order to traslate the indexes and make them compatible with the padded matrix
     alive_idx += np.array([1, 1])
@@ -43,7 +43,27 @@ def newgen(cells: npt.NDArray[np.bool_], alive_idx: npt.NDArray[np.intp], dead_i
 
     return newgen
 
-cells, alive, dead = cellgen(10, 8)
-new = newgen(cells, alive, dead)
-print(new, '\n\n')
+def evolution(genzero: npt.NDArray[np.bool_], timesteps: int):
+    
+    #Creates a list containing the configurations for each timestep in the evolution
+    timeline = []
+    
+    #Calculates the configuration for each timestep, given the previous configuration (A FUCKING MARKOV PROCESS GHESBO)
+    #NOW PROVE THE CHAPMAN COLGOMOROV EQUATION
+    for t in range(timesteps):
+        new = newgen(cells=genzero)
+        timeline.append(new)
+    
+    return timeline
+
+
+cells = cellgen(10, 8)
+timeline = evolution(genzero=cells, timesteps=3)
+print(timeline)
+
+'''
+cells = cellgen(10, 8)
+new = newgen(cells=cells)
+print(cells, '\n\n', new)
 print(new.shape)
+'''
