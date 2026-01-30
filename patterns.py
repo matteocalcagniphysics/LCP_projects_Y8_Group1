@@ -1,6 +1,6 @@
 import numpy as np
 """
-PATTERN LIBRARY MODULE
+
 Usage:
     import patterns
     grid = patterns.insert_pattern(grid, "Category", "Name", row, col, rotate=0, flip=False)
@@ -110,7 +110,7 @@ def get_patterns_by_category(category):
     return list(SEED_DATA.get(category, {}).keys())
 #Test
 if __name__ == "__main__":
-    print("--- FULL PATTERN LIBRARY TEST ---")
+
     
     # 1. Basic Test: Multiple insertions
     grid = np.zeros((10, 10), dtype=int)
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     print("\n1. Basic Insertion (Block at 1,1 and Glider at 5,5):")
     print(grid)
     
-    # 2. Crucial Test: Toroidal Logic (Wrap-around)
+    # 2.Test: Toroidal Logic (Wrap-around)
     # Placing a 1x3 Blinker at the last column (index 9).
     # Expected: The cells should wrap to columns 9, 0, and 1.
     toroidal_grid = np.zeros((10, 10), dtype=int)
