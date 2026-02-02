@@ -1,0 +1,31 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# --- Jupyter Notebooks ---
+.ipynb_checkpoints
+
+# --- IDE e Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Output di Matplotlib/Grafici (opzionale) ---
+# Se salvi i grafici in una cartella specifica, aggiungila qui
+# output_plots/
+*.png
+*.pdf
+*.svg
+# Ma attenzione: non escluderli se vuoi che i grafici finali siano su GitHub!
+
+Project.ipynb
+README.md
