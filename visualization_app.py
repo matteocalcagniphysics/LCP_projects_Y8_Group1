@@ -1,39 +1,59 @@
 import tkinter as tk
 import numpy as np
 
-# Configurazione estetica
-CELL_SIZE = 20  # Dimensione fissa ma generosa
-ROWS, COLS = 30, 40
-BG_COLOR = "#1e1e1e" # Grigio scuro molto "pro"
-GRID_COLOR = "#333333"
+# Global constants
+COLORS = {
+    "alive" : "white"   ,       # Alive cell
+    "dead"  : "black"   ,       # Dead cell
+    "bg"    : "#505050" ,       # Background
+}
+WIDTH = 1000
+HEIGHT = 800
 
-root = tk.Tk()
-root.title("Game of Life - Jupyter Edition")
-root.configure(bg=BG_COLOR)
+# Grid variables that can be changed in the app
+ROWS = 20
+COLS = 20
+CELL_SIZE = WIDTH // COLS
 
-# Calcoliamo la dimensione esatta per contenere la griglia
-canvas_w = COLS * CELL_SIZE
-canvas_h = ROWS * CELL_SIZE
 
-# highlightthickness=0 rimuove il bordo brutto di default di tkinter
-canvas = tk.Canvas(root, width=canvas_w, height=canvas_h, 
-                   bg=BG_COLOR, highlightthickness=0)
-canvas.pack(padx=20, pady=20) # Aggiunge un po' di "respiro" intorno
+# Game of Life implementation using a class
+class GameOfLife():
 
-def draw_static_grid():
-    # Creiamo la matrice di esempio
-    cells = np.random.choice([True, False], size=(ROWS, COLS))
+    def __init__(self, root):
+        # Set up the main window
+        self.root = root
+        self.root.title("Game of Life")
+        self.root.geometry(f"{WIDTH}x{HEIGHT}")
+        self.root.resizable(False, False)         # Don't make the window resizable
+        self.root.configure(bg=COLORS["bg"])      # Set the background color of the main window
+
+        # Initialise state variables
+        self.state = np.random.choice([True, False], size=(ROWS, COLS))     # Initial state of the grid
+        self.is_running = False                                             # State of the simulation
+        self.FPS = 2                                                        # Frame per second
+        self.generation = 0                                                 # Generation counter
+
+        # Call setup methods
+        self._setup_canvas()
+        self._draw_grid()
+
+    def _setup_canvas(self):
+        """Set up the canvas for drawing the grid"""
+        self.canvas = tk.Canvas(self.root, width=WIDTH, height=HEIGHT, bg=COLORS["bg"])
+        self.canvas.pack()
     
-    for (r, c), alive in np.ndenumerate(cells):
-        x1, y1 = c * CELL_SIZE, r * CELL_SIZE
-        x2, y2 = x1 + CELL_SIZE, y1 + CELL_SIZE
-        
-        color = "white" if alive else "black"
-        canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline=GRID_COLOR)
+    def _draw_grid(self):
+        """Draw the grid on the canvas"""
+        for row in range(ROWS):
+            for col in range(COLS):
+                x1 = col * CELL_SIZE
+                y1 = row * CELL_SIZE
+                x2 = x1 + CELL_SIZE
+                y2 = y1 + CELL_SIZE
+                color = COLORS["alive"] if self.state[row, col] else COLORS["dead"]
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="blue")
 
-draw_static_grid()
-
-# Impedisce all'utente di deformare la finestra (mantiene l'estetica)
-root.resizable(False, False) 
-
-root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = GameOfLife(root)
+    root.mainloop()                # Start the application
