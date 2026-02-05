@@ -30,3 +30,9 @@ Thumbs.db
 Project.ipynb
 README.md
 .python-version
+.Analysis/
+.lcp/
+.patterns.py
+.cellgen_methods.py
+.analysis.py
+.cellgen.py
