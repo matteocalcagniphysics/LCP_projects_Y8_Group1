@@ -1,5 +1,6 @@
 import numpy as np
 
+
 """
 Usage:
     import patterns
@@ -46,13 +47,31 @@ def _create_random(rows=10, cols=10, density=0.3, seed=None):
         np.random.seed(seed)
     return (np.random.rand(rows, cols) < density).astype(int)
 
+def _create_breeder():
+    """Generates a diagonal Breeder (simplified version)."""
+    b = np.zeros((50, 50), dtype=int)
+    for i in range(0, 48, 6):
+        b[i:i+2, i:i+2] = 1
+    return b
 
-# Nested dictionary storing all patterns
+def _create_snark():
+    """Stable reflector (Snark) coordinates."""
+    s = np.zeros((11, 17), dtype=int)
+    coords = [(0,5), (0,6), (1,5), (1,7), (2,7), (3,0), (3,1), (3,7), (3,8), (4,0), (4,1),
+              (5,8), (5,9), (5,10), (6,8), (6,11), (7,9), (7,10), (8,15), (8,16), (9,14), (9,16), (10,16)]
+    for r, c in coords: s[r, c] = 1
+    return s
+  
+
+
+
+# --- Nested dictionary storing all patterns ---
 SEED_DATA = {
     "Still Life": {
         "Block": np.array([[1, 1], [1, 1]]),
         "Beehive": np.array([[0, 1, 1, 0], [1, 0, 0, 1], [0, 1, 1, 0]]),
-        "Loaf": np.array([[0, 1, 1, 0], [1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 0]])
+        "Loaf": np.array([[0, 1, 1, 0], [1, 0, 0, 1], [0, 1, 0, 1], [0, 0, 1, 0]]),
+        "Snark": _create_snark()  # Added: Stable reflector
     },
     "Oscillator": {
         "Blinker": np.array([[1, 1, 1]]),
@@ -62,18 +81,22 @@ SEED_DATA = {
     },
     "Spaceship": {
         "Glider": np.array([[0, 1, 0], [0, 0, 1], [1, 1, 1]]),
-        "LWSS": np.array([[0, 1, 1, 1, 1], [1, 0, 0, 0, 1], [0, 0, 0, 0, 1], [1, 0, 0, 1, 0]])
+        "LWSS": np.array([[0, 1, 1, 1, 1], [1, 0, 0, 0, 1], [0, 0, 0, 0, 1], [1, 0, 0, 1, 0]]),
+        "HWSS": np.array([[0,0,0,1,1,0,0], [0,1,0,0,0,0,1], [1,0,0,0,0,0,0], [1,0,0,0,0,0,1], [1,1,1,1,1,1,1]]) #  Heavyweight Spaceship
     },
     "Complex": { 
-        "Glider Gun": _create_glider_gun() 
-    }, # <-- Aggiunta virgola qui
+        "Glider Gun": _create_glider_gun(),
+        "Breeder": _create_breeder()  #  Quadratic growth pattern
+    },
+    "Methuselah": {
+        "Acorn": np.array([[0,1,0,0,0,0,0], [0,0,0,1,0,0,0], [1,1,0,0,1,1,1]]) #  Long-lived small pattern
+    },
     "Random": {
         "Small Chaos": _create_random(5, 5),
         "Medium Chaos": _create_random(10, 10),
         "Large Chaos": _create_random(20, 20)
     }    
 }
-
 # Core functions
 
 def insert_pattern(grid, category, name, row_origin, col_origin, rotate=0, flip=False):
@@ -101,24 +124,21 @@ def insert_pattern(grid, category, name, row_origin, col_origin, rotate=0, flip=
         print(f"Error: Pattern '{name}' in '{category}' not found.")
         return grid
 
+   
     seed = SEED_DATA[category][name].copy()
-    
-    if flip: 
-        seed = np.fliplr(seed)
-    if rotate != 0: 
-        seed = np.rot90(seed, k=rotate)
+    if flip: seed = np.fliplr(seed)
+    if rotate != 0: seed = np.rot90(seed, k=rotate)
 
-    s_rows, s_cols = seed.shape
     g_rows, g_cols = grid.shape
+    rows_idx, cols_idx = np.where(seed == 1)
 
-    for r in range(s_rows):
-        for c in range(s_cols):
-            if seed[r, c] == 1:
-                target_r = (row_origin + r) % g_rows
-                target_c = (col_origin + c) % g_cols
-                grid[target_r, target_c] = 1
+   
+    target_rows = (rows_idx + row_origin) % g_rows
+    target_cols = (cols_idx + col_origin) % g_cols
+
+    grid[target_rows, target_cols] = 1
     return grid
-
+    
 def get_available_categories():
     """Returns a list of all available pattern categories."""
     return list(SEED_DATA.keys())
@@ -207,3 +227,32 @@ if __name__ == "__main__":
         print(f"Name: {pattern_info['name']}")
         print(f"Live Cells: {pattern_info['live_cells']}")
         print(f"Density: {pattern_info['initial_density']}")
+    #6. new complex patterns
+    print("--- Testing New Complex Patterns ---")
+    
+    # List of the new patterns we want to verify
+    new_patterns = [
+        ("Still Life", "Snark"),
+        ("Spaceship", "HWSS"),
+        ("Complex", "Breeder"),
+        ("Methuselah", "Acorn")
+    ]
+    
+    for category, name in new_patterns:
+        data = get_pattern_data(category, name)
+        
+        if data:
+            print(f" Pattern: {name:10} | Category: {category:12} | Size: {str(data['dimensions']):8} | Live Cells: {data['live_cells']}")
+        else:
+            print(f" Error: Pattern '{name}' not found in category '{category}'")
+
+    # Final check: print the Acorn matrix to see it clearly
+    print("\nVisual check for 'Acorn':")
+    acorn = SEED_DATA["Methuselah"]["Acorn"]
+    # Simple trick to print 1 as '#' and 0 as '.'
+    for row in acorn:
+        print(" ".join(['#' if cell else '.' for cell in row]))
+
+
+
+
