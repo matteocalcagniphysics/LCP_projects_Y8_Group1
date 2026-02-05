@@ -45,23 +45,31 @@ def newgen(cells: npt.NDArray[np.bool_]):
 
 def evolution(genzero: npt.NDArray[np.bool_], timesteps: int):
     
-    #Creates a list containing the configurations for each timestep in the evolution
+    # Creates a list containing the configurations for each timestep in the evolution
     timeline = []
     
-    #Calculates the configuration for each timestep, given the previous configuration (A FUCKING MARKOV PROCESS GHESBO)
-    #NOW PROVE THE CHAPMAN COLGOMOROV EQUATION
+    # Initialize the current state with the generation zero
+    current_state = genzero
+    timeline.append(current_state) # Include the starting state in the timeline
+    
+    # Calculates the configuration for each timestep
     for t in range(timesteps):
-        new = newgen(cells=genzero)
+        # ERROR FIX: We must use 'current_state' as input, not 'genzero' repeatedly
+        new = newgen(cells=current_state)
+        
+        # Update the current state for the next iteration
+        current_state = new
+        
         timeline.append(new)
     
     return timeline
 
-
+'''
 cells = cellgen(10, 8)
 timeline = evolution(genzero=cells, timesteps=3)
 print(timeline)
 
-'''
+
 cells = cellgen(10, 8)
 new = newgen(cells=cells)
 print(cells, '\n\n', new)
