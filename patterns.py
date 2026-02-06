@@ -13,9 +13,12 @@ Available Tools:
 # IMPORTANT : THIS VERSION HAS BEEN MODIFIED FROM THE TINA'S ONE.
 
 
-
-
 import numpy as np
+
+# FOR THE SIMULATION
+
+# =======================================================================================
+# =======================================================================================
 
 # Patterns generation functions
 
@@ -107,6 +110,10 @@ def insert_pattern(grid, category, name, row_origin, col_origin, rotate=0, flip=
                 target_c = (col_origin + c) % g_cols
                 grid[target_r, target_c] = 1
     return grid
+
+# =======================================================================================
+# =======================================================================================
+
 
 # Useful functions to check cathegories and patterns available for the simulation
 
