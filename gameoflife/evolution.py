@@ -1,15 +1,6 @@
 import numpy as np
 import numpy.typing as npt #For writing the data types in the function definition
 
-def cellgen(nrows: int, ncols: int):
-    #Fixes the seed for replicability
-    np.random.seed(200)
-
-    #Generates randomly the initial distribution (seed)
-    cells = np.random.choice(a=[True, False], size=(nrows, ncols)) 
-
-    return cells
-
 def newgen(cells: npt.NDArray[np.bool_]):
     #This create a wrapped surface, where top is identified with bottom and left with right
     padded = np.pad(cells, pad_width=1, mode='wrap')
@@ -63,15 +54,3 @@ def evolution(genzero: npt.NDArray[np.bool_], timesteps: int):
         timeline.append(new)
     
     return timeline
-
-'''
-cells = cellgen(10, 8)
-timeline = evolution(genzero=cells, timesteps=3)
-print(timeline)
-
-
-cells = cellgen(10, 8)
-new = newgen(cells=cells)
-print(cells, '\n\n', new)
-print(new.shape)
-'''
