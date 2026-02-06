@@ -2,3 +2,4 @@
 
 from . import evolution
 from . import patterns
+from . import visualization
