@@ -42,8 +42,7 @@ def _create_pentadecathlon():
     p[1, [0, 1, 3, 4, 5, 6, 8, 9]] = 1
     
     # Righe superiore e inferiore: solo posizioni 2 e 7
-    p[0, [2, 7]] = 1
-    p[2, [2, 7]] = 1
+    p[[0, 2], [2, 7]] = 1
     
     return p
 
