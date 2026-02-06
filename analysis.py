@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
-import cellgen_methods as cg
-import patterns as pt
+import gameoflife.evolution as cg
+import gameoflife.patterns as pt
 
 # ==========================================
 # 1. CONFIGURATION SUITE
