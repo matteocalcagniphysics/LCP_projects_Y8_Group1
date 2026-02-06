@@ -1,6 +1,6 @@
-import numpy as np
-"""
 
+
+"""
 Usage:
     import patterns
     grid = patterns.insert_pattern(grid, "Category", "Name", row, col, rotate=0, flip=False)
@@ -10,6 +10,14 @@ Available Tools:
     - patterns.get_patterns_by_category("CategoryName")
 """
 
+# IMPORTANT : THIS VERSION HAS BEEN MODIFIED FROM THE TINA'S ONE.
+
+
+
+
+import numpy as np
+
+# Patterns generation functions
 
 def _create_pulsar():
     """Generates the 13x13 matrix for the Pulsar oscillator."""
@@ -62,7 +70,6 @@ SEED_DATA = {
     }
 }
 
-
 #Core functions
 
 def insert_pattern(grid, category, name, row_origin, col_origin, rotate=0, flip=False):
@@ -101,6 +108,8 @@ def insert_pattern(grid, category, name, row_origin, col_origin, rotate=0, flip=
                 grid[target_r, target_c] = 1
     return grid
 
+# Useful functions to check cathegories and patterns available for the simulation
+
 def get_available_categories():
     """Returns a list of all available pattern categories."""
     return list(SEED_DATA.keys())
@@ -108,35 +117,4 @@ def get_available_categories():
 def get_patterns_by_category(category):
     """Returns a list of pattern names within a specific category."""
     return list(SEED_DATA.get(category, {}).keys())
-#Test
-if __name__ == "__main__":
 
-    
-    # 1. Basic Test: Multiple insertions
-    grid = np.zeros((10, 10), dtype=int)
-    insert_pattern(grid, "Still Life", "Block", 1, 1)
-    insert_pattern(grid, "Spaceship", "Glider", 5, 5)
-    
-    print("\n1. Basic Insertion (Block at 1,1 and Glider at 5,5):")
-    print(grid)
-    
-    # 2.Test: Toroidal Logic (Wrap-around)
-    # Placing a 1x3 Blinker at the last column (index 9).
-    # Expected: The cells should wrap to columns 9, 0, and 1.
-    toroidal_grid = np.zeros((10, 10), dtype=int)
-    insert_pattern(toroidal_grid, "Oscillator", "Blinker", 5, 9)
-    
-    print("\n2. Toroidal Test (Blinker starting at col 9 - should wrap to col 0,1):")
-    print(f"Row 5: {toroidal_grid[5]}") 
-    
-    # 3. Features Test: Rotation
-    # A horizontal Blinker rotated by 90 degrees should become vertical.
-    rotation_grid = np.zeros((5, 5), dtype=int)
-    insert_pattern(rotation_grid, "Oscillator", "Blinker", 1, 2, rotate=1)
-    print("\n3. Rotation Test (Blinker rotated 90°):")
-    print(rotation_grid)
-    
-    # 4. Library Integrity Check
-    print("\n4. Library Content Check:")
-    for cat in get_available_categories():
-        print(f"Category '{cat}': {get_patterns_by_category(cat)}")
