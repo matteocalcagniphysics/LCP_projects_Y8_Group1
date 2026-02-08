@@ -6,6 +6,7 @@ COLORS = {
     "alive" : "white"   ,       # Alive cell
     "dead"  : "black"   ,       # Dead cell
     "bg"    : "#505050" ,       # Background
+    "grid"  : "gray"    ,       # Grid color
 }
 WIDTH = 1000
 HEIGHT = 800
@@ -51,7 +52,7 @@ class GameOfLife():
                 x2 = x1 + CELL_SIZE
                 y2 = y1 + CELL_SIZE
                 color = COLORS["alive"] if self.state[row, col] else COLORS["dead"]
-                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline="blue")
+                self.canvas.create_rectangle(x1, y1, x2, y2, fill=color, outline=)
 
 if __name__ == "__main__":
     root = tk.Tk()

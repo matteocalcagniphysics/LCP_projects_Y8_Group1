@@ -2,16 +2,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.animation as animation
-from IPython.display import HTML, display       # For displaying the animation in Jupyter
 import evolution as evo
 
 
 # Color configuration for visualization
 COLORS = {
-    "True" : "white"  ,        # Alive cells
-    "False": "black"  ,        # Dead cells
-    "Grid" : "#505050",        # Grid color (light gray)
+    "Alive" : "white"  ,        # Alive cells
+    "Dead"  : "black"  ,        # Dead cells
+    "Grid"  : "#505050",        # Grid color (light gray)
 }
+
+
+
+
+def is_notebook() -> bool:
+    """
+    Detects if the code is running in a Jupyter notebook environment.
+    Used to determine whether to use HTML display for Jupyter notebooks or plt.show() for regular Python scripts.
+    Returns:
+        bool: True if running in Jupyter, False otherwise.
+    """
+    try:
+        from IPython import get_ipython
+        if get_ipython() is None:
+            return False
+        # Check if we're in an IPython environment (notebook or IPython terminal)
+        shell = get_ipython().__class__.__name__
+        if shell == 'ZMQInteractiveShell':          # Jupyter notebook
+            return True
+        elif shell == 'TerminalInteractiveShell':   # IPython terminal
+            return False
+        else:
+            return False
+    except (ImportError, NameError):
+        return False
+
 
 
 def create_evolution(grid: np.ndarray, frames: int, interval: int) -> animation.FuncAnimation:
@@ -27,7 +52,7 @@ def create_evolution(grid: np.ndarray, frames: int, interval: int) -> animation.
     """
 
     # 1. Create a personalized colormap
-    colors_list = [COLORS["False"], COLORS["True"]]
+    colors_list = [COLORS["Dead"], COLORS["Alive"]]
     cmap = mcolors.ListedColormap(colors_list)
     
 
@@ -94,35 +119,57 @@ def create_evolution(grid: np.ndarray, frames: int, interval: int) -> animation.
 
     plt.tight_layout()
 
-    # Then, we create the animation object using blit=True for better performance
-    anim = animation.FuncAnimation(fig, update, frames=frames, interval=interval, blit=True)
+    # Then, we create the animation object
+    # Use blit=True only in notebooks (where to_jshtml() is used) for better performance
+    # In regular Python scripts, blit=True causes the grid to disappear after the first frame
+    # because the grid is not returned by the update function
+    use_blit = is_notebook()
+    anim = animation.FuncAnimation(fig, update, frames=frames, interval=interval, 
+                                   blit=use_blit, repeat=False)
     
-    plt.close(fig)  # Prevents static image display
+    # Close the figure only in notebook environments to prevent static image display
+    # In regular Python scripts, we need to keep it open for plt.show()
+    if is_notebook():
+        plt.close(fig)
+    
     return anim
 
 
 def plot_evolution(grid: np.ndarray, frames: int, FPS: int) -> None:
     """
-    Plots the Game of Life grid evolution in a Jupyter notebook using HTML display.
-    Args to be passed to create_evolution:
+    Plots the Game of Life grid evolution.
+    Automatically detects the environment and uses:
+    - HTML display for Jupyter notebooks
+    - plt.show() for regular Python scripts
+    
+    Args:
         grid (np.ndarray): 2D array representing the initial grid state.
         frames (int): Number of generations to animate.
         FPS (int): Frames per second for the animation (converted in "interval": delay
                    between frames in milliseconds).
     """
 
-
     # 1. Use the helper function to create the animation object
     interval = 1000 // FPS  # Convert FPS to interval in milliseconds
     anim = create_evolution(grid, frames, interval=interval)
 
-
-    # 2. Display the animation in Jupyter with some styling (a CSS wrapper) for better appearance
-    styled_html = f"""
-        <div style="max-width: 600px; width: 100%; margin: 0 auto;">
-            {anim.to_jshtml()}
-        </div>
-    """
-    display(HTML(styled_html))
+    # 2. Display the animation based on the environment
+    if is_notebook():
+        # In Jupyter notebook: use HTML display with styling
+        try:
+            from IPython.display import HTML, display
+            styled_html = f"""
+                <div style="max-width: 600px; width: 100%; margin: 0 auto;">
+                    {anim.to_jshtml()}
+                </div>
+            """
+            display(HTML(styled_html))
+        except ImportError:
+            # Fallback if IPython is not available (shouldn't happen if is_notebook() returned True)
+            print("Warning: IPython not available, using plt.show() instead")
+            plt.show()
+    else:
+        # In regular Python script: use matplotlib's native display
+        plt.show()
 
     return None
