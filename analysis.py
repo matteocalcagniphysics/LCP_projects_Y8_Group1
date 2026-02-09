@@ -79,10 +79,10 @@ class SimulationRunner:
         Calculates the spatial center of mass of alive cells.
         Returns (row, col). Returns (NaN, NaN) if grid is empty.
         """
-        indices = np.argwhere(grid)
+        indices = np.argwhere(grid)         # Find indices (row, col) of alive cells
         if indices.size == 0:
             return np.nan, np.nan
-        mean_pos = np.mean(indices, axis=0)
+        mean_pos = np.mean(indices, axis=0) # Mean of each column (rows, cols)
         return mean_pos[0], mean_pos[1]
 
     @staticmethod
@@ -96,7 +96,7 @@ class SimulationRunner:
         
         # Look backwards from the second-to-last frame
         # We limit the search to avoid performance issues on very long simulations
-        search_limit = min(n_steps, 200) 
+        search_limit = min(n_steps, 200)
         
         for i in range(n_steps - 2, n_steps - 2 - search_limit, -1):
             if i < 0: break
@@ -177,7 +177,7 @@ class SimulationRunner:
         # --- A. Setup Grid ---
         grid = np.zeros((rows, cols), dtype=bool)
         
-        # Inject pattern using Tina's library
+        # Inject pattern
         r_start, c_start = config["pos"]
         grid = pt.insert_pattern(grid, cat, p_name, r_start, c_start)
 
@@ -212,19 +212,19 @@ class SimulationRunner:
             results["com_y"].append(r) # Row index maps to Y
             results["com_x"].append(c) # Col index maps to X
 
-            # 3. Entropy
+            # 3. Entropy: Measure of spatial distribution complexity
             ent = SimulationRunner.calculate_entropy(state)
             results["entropy"].append(ent)
             
-            # 4. Activity (Flux)
+            # 4. Activity (Flux): Total number of cell state changes from previous step
             if prev_state is None:
-                flux = 0 
+                flux = 0
             else:
-                flux = np.sum(np.logical_xor(state, prev_state))
+                flux = np.sum(np.logical_xor(state, prev_state))    # XOR logic: True only if state changed
             results["activity"].append(flux)
             prev_state = state
             
-            # 5. Heatmap Accumulation
+            # 5. Heatmap Accumulation: Number of cells that are alive at each position
             results["heatmap"] += state.astype(int)
 
         # --- D. Post-Processing Analysis ---
