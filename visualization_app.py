@@ -3,7 +3,8 @@ from tkinter import ttk
 import numpy as np
 import sys
 sys.path.append('gameoflife')
-import evolution as evo
+import gameoflife.evolution as evo
+import gameoflife.patterns as patterns
 
 
 # Global constants for colors
@@ -168,6 +169,39 @@ class GameOfLife:
                               length=180)
         speed_slider.pack(pady=5, padx=10)
 
+        # Pattern selection
+        pattern_label = tk.Label(self.left_frame, text="Pattern Preset", 
+                                font=("Arial", 11),
+                                fg=COLORS["text"], bg=COLORS["panel_bg"])
+        pattern_label.pack(pady=(30, 5))
+        
+        # Get all available patterns
+        self.pattern_options = ["Random"]
+        categories = patterns.get_available_categories()
+        for category in categories:
+            pattern_names = patterns.get_patterns_by_category(category)
+            for pattern_name in pattern_names:
+                self.pattern_options.append(f"{category}: {pattern_name}")
+        
+        self.pattern_var = tk.StringVar(value="Random")
+        pattern_dropdown = ttk.Combobox(self.left_frame, 
+                                       textvariable=self.pattern_var,
+                                       values=self.pattern_options,
+                                       state="readonly",
+                                       font=("Arial", 9),
+                                       width=18)
+        pattern_dropdown.pack(pady=5, padx=10)
+        
+        # Load pattern button
+        load_pattern_btn = tk.Button(self.left_frame, text="Load Pattern",
+                                    command=self._load_pattern,
+                                    font=("Arial", 10),
+                                    bg="#1976D2", fg=COLORS["btn_fg"],
+                                    activebackground="#2196F3",
+                                    relief=tk.RAISED, bd=2,
+                                    width=15, height=1)
+        load_pattern_btn.pack(pady=5, padx=10)
+        
         # Seed control
         seed_label = tk.Label(self.left_frame, text="Seed (optional)", 
                              font=("Arial", 11),
@@ -323,6 +357,47 @@ class GameOfLife:
                                       font=("Arial", 12, "bold"),
                                       fg="#FFC107", bg=COLORS["panel_bg"])
         self.status_display.pack()
+        
+        # Legend section
+        legend_frame = tk.Frame(self.right_frame, bg=COLORS["panel_bg"])
+        legend_frame.pack(pady=(30, 10), padx=10)
+        
+        legend_title = tk.Label(legend_frame, text="Legend", 
+                               font=("Arial", 11, "bold"),
+                               fg=COLORS["text"], bg=COLORS["panel_bg"])
+        legend_title.pack(pady=(0, 10))
+        
+        # Alive cells
+        alive_container = tk.Frame(legend_frame, bg=COLORS["panel_bg"])
+        alive_container.pack(pady=5)
+        
+        alive_box = tk.Canvas(alive_container, width=20, height=20, 
+                             bg=COLORS["panel_bg"], highlightthickness=0)
+        alive_box.create_rectangle(2, 2, 18, 18, 
+                                  fill=COLORS["alive"], 
+                                  outline=COLORS["grid"])
+        alive_box.pack(side=tk.LEFT, padx=(0, 8))
+        
+        alive_label = tk.Label(alive_container, text="Alive cells", 
+                              font=("Arial", 10),
+                              fg=COLORS["text"], bg=COLORS["panel_bg"])
+        alive_label.pack(side=tk.LEFT)
+        
+        # Dead cells
+        dead_container = tk.Frame(legend_frame, bg=COLORS["panel_bg"])
+        dead_container.pack(pady=5)
+        
+        dead_box = tk.Canvas(dead_container, width=20, height=20, 
+                            bg=COLORS["panel_bg"], highlightthickness=0)
+        dead_box.create_rectangle(2, 2, 18, 18, 
+                                 fill=COLORS["dead"], 
+                                 outline=COLORS["grid"])
+        dead_box.pack(side=tk.LEFT, padx=(0, 8))
+        
+        dead_label = tk.Label(dead_container, text="Dead cells", 
+                             font=("Arial", 10),
+                             fg=COLORS["text"], bg=COLORS["panel_bg"])
+        dead_label.pack(side=tk.LEFT)
 
 
     def _draw_grid(self):
@@ -456,6 +531,58 @@ class GameOfLife:
     def _update_speed(self, value):
         """Update simulation speed"""
         self.fps = int(value)
+
+
+    def _load_pattern(self):
+        """Load selected pattern into the grid"""
+        selected = self.pattern_var.get()
+        
+        # Stop simulation if running
+        was_running = self.is_running
+        if self.is_running:
+            self._toggle_simulation()
+        
+        # Handle special case for Random
+        if selected == "Random":
+            self._reset_grid()
+            return
+        
+        # Parse selection: "Category: Pattern Name"
+        try:
+            category, pattern_name = selected.split(": ", 1)
+        except ValueError:
+            return
+        
+        # Clear grid first
+        self.state = np.zeros((self.rows, self.cols), dtype=bool)
+        
+        # Calculate center position for pattern
+        # We'll place the pattern in the center of the grid
+        center_row = self.rows // 2
+        center_col = self.cols // 2
+        
+        # Convert boolean grid to int for patterns module
+        temp_grid = self.state.astype(int)
+        
+        # Insert pattern at center
+        temp_grid = patterns.insert_pattern(
+            temp_grid, 
+            category, 
+            pattern_name, 
+            center_row, 
+            center_col
+        )
+        
+        # Convert back to boolean
+        self.state = temp_grid.astype(bool)
+        
+        # Reset generation counter
+        self.previous_state = None
+        self.generation = 0
+        
+        # Update display
+        self._draw_grid()
+        self.gen_display.config(text="0")
 
 
     def _apply_grid_size(self):
