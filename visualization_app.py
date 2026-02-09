@@ -3,7 +3,7 @@ from tkinter import ttk
 import numpy as np
 import sys
 sys.path.append('gameoflife')
-import evolution as evo
+import gameoflife.evolution as evo
 
 
 # Global constants for colors
