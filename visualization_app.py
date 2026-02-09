@@ -4,15 +4,12 @@ import numpy as np
 import sys
 sys.path.append('gameoflife')
 import gameoflife.evolution as evo
-<<<<<<< HEAD
 import gameoflife.patterns as patterns
-=======
->>>>>>> 74fc5816bde7e9de14fdcd673181ff4461fc858b
 
 
 # Global constants for colors
 COLORS = {
-    "alive"     : "white"   ,   # Alive cell
+    "alive"     : "white"   ,   # Alive cellG
     "dead"      : "black"   ,   # Dead cell
     "bg"        : "#2E2E2E" ,   # Dark background
     "grid"      : "#505050" ,   # Grid lines
