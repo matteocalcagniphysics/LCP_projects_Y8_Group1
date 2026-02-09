@@ -4,7 +4,10 @@ import numpy as np
 import sys
 sys.path.append('gameoflife')
 import gameoflife.evolution as evo
+<<<<<<< HEAD
 import gameoflife.patterns as patterns
+=======
+>>>>>>> 74fc5816bde7e9de14fdcd673181ff4461fc858b
 
 
 # Global constants for colors
