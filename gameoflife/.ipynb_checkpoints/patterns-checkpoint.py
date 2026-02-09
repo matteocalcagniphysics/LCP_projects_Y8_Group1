@@ -42,8 +42,7 @@ def _create_pentadecathlon():
     p[1, [0, 1, 3, 4, 5, 6, 8, 9]] = 1
     
     # Righe superiore e inferiore: solo posizioni 2 e 7
-    p[0, [2, 7]] = 1
-    p[2, [2, 7]] = 1
+    p[[0, 2], [2, 7]] = 1
     
     return p
 
@@ -51,7 +50,7 @@ def _create_glider_gun():
     """Generates the 9x36 matrix for the Gosper Glider Gun."""
     gun = np.zeros((9, 36), dtype=int)
     coords = [(4,0), (4,1), (5,0), (5,1), (2,12), (2,13), (3,11), (4,10), (5,10), (6,10), 
-              (7,11), (7,15), (8,12), (8,13), (5,14), (3,15), (4,16), (5,16), (6,16), (5,17), 
+              (7,11), (8,12), (8,13), (5,14), (3,15), (4,16), (5,16), (6,16), (5,17), 
               (2,20), (2,21), (3,20), (3,21), (4,20), (4,21), (1,22), (5,22), (0,24), 
               (1,24), (5,24), (6,24), (2,34), (2,35), (3,34), (3,35)]
     for r, c in coords: 
@@ -77,9 +76,6 @@ SEED_DATA = {
     },
     "Complex": { 
         "Glider Gun": _create_glider_gun() 
-    },
-    "Random": {
-        "Random": None      # This is a placeholder for the random pattern
     }
 }
 
@@ -99,16 +95,6 @@ def insert_pattern(grid, category, name, row_origin, col_origin, rotate=0, flip=
     if category not in SEED_DATA or name not in SEED_DATA[category]:
         print(f"Error: Pattern '{name}' in '{category}' not found.")
         return grid
-
-    # Handle dynamic random pattern
-    if category == "Random":
-        if name == "Random":
-            # Generate a random grid of the same shape as the input grid
-            random_grid = np.random.choice([0, 1], size=grid.shape, p=[0.5, 0.5])
-            return random_grid
-        else:
-            print(f"Error: Pattern '{name}' in '{category}' not found.")
-            return grid
 
     # Copy the seed to avoid modifying the original database during transformations
     seed = SEED_DATA[category][name].copy()
