@@ -70,6 +70,9 @@ SEED_DATA = {
     },
     "Complex": { 
         "Glider Gun": _create_glider_gun() 
+    },
+    "Random": {
+        "Random": None      # This is a placeholder for the random pattern
     }
 }
 
@@ -89,6 +92,16 @@ def insert_pattern(grid, category, name, row_origin, col_origin, rotate=0, flip=
     if category not in SEED_DATA or name not in SEED_DATA[category]:
         print(f"Error: Pattern '{name}' in '{category}' not found.")
         return grid
+
+    # Handle dynamic random pattern
+    if category == "Random":
+        if name == "Random":
+            # Generate a random grid of the same shape as the input grid
+            random_grid = np.random.choice([0, 1], size=grid.shape, p=[0.5, 0.5])
+            return random_grid
+        else:
+            print(f"Error: Pattern '{name}' in '{category}' not found.")
+            return grid
 
     # Copy the seed to avoid modifying the original database during transformations
     seed = SEED_DATA[category][name].copy()

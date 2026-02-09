@@ -55,7 +55,7 @@ TEST_SUITE = [
     {
         "name": "Random_Entropy",
         "category": "Random",
-        "pattern_name": "Random", # Special keyword
+        "pattern_name": "Random",
         "pos": (0, 0),
         "steps": 200,
         "grid_size": (80, 80)
@@ -130,6 +130,38 @@ class SimulationRunner:
         return "Chaotic / Complex Stabilization"
 
     @staticmethod
+    def calculate_entropy(grid):
+        """
+        Calculates the Shannon Entropy of the spatial distribution of the grid.
+        """
+        # Calculate neighbor counts for all active cells
+        padded = np.pad(grid, pad_width=1, mode='wrap')
+        neighbors = np.zeros_like(grid, dtype=int)
+        
+        # Sum all 8 neighbors
+        for i in [-1, 0, 1]:
+            for j in [-1, 0, 1]:
+                if i == 0 and j == 0: continue
+                # Slice and add
+                neighbors += padded[1+i:1+i+grid.shape[0], 1+j:1+j+grid.shape[1]]
+        
+        # Compute histogram of neighbor counts (0 to 8)
+        counts = np.bincount(neighbors.flatten(), minlength=9)
+        
+        # Normalize to probability distribution
+        total = np.sum(counts)
+        if total == 0: return 0.0
+        
+        probs = counts / total
+        
+        # Filter zero probabilities to avoid log(0)
+        probs = probs[probs > 0]
+        
+        # Shannon Entropy: -Sum(p * log2(p))
+        entropy = -np.sum(probs * np.log2(probs))
+        return entropy
+
+    @staticmethod
     def run(config):
         """
         Executes a single experiment configuration.
@@ -145,12 +177,9 @@ class SimulationRunner:
         # --- A. Setup Grid ---
         grid = np.zeros((rows, cols), dtype=bool)
         
-        if cat == "Random":
-            grid = cg.cellgen(rows, cols)
-        else:
-            # Inject pattern using Tina's library
-            r_start, c_start = config["pos"]
-            grid = pt.insert_pattern(grid, cat, p_name, r_start, c_start)
+        # Inject pattern using Tina's library
+        r_start, c_start = config["pos"]
+        grid = pt.insert_pattern(grid, cat, p_name, r_start, c_start)
 
         # --- B. Evolution Loop ---
         print(f"[{name}] Simulating {steps} generations...")
@@ -163,10 +192,14 @@ class SimulationRunner:
             "occupancy": [],
             "com_x": [],
             "com_y": [],
+            "entropy": [],
+            "activity": [],
+            "heatmap": np.zeros((rows, cols), dtype=int),
             "displacement": 0.0
         }
         
         total_pixels = rows * cols
+        prev_state = None
 
         for state in timeline:
             # 1. Population Metrics
@@ -178,6 +211,21 @@ class SimulationRunner:
             r, c = SimulationRunner.get_center_of_mass(state)
             results["com_y"].append(r) # Row index maps to Y
             results["com_x"].append(c) # Col index maps to X
+
+            # 3. Entropy
+            ent = SimulationRunner.calculate_entropy(state)
+            results["entropy"].append(ent)
+            
+            # 4. Activity (Flux)
+            if prev_state is None:
+                flux = 0 
+            else:
+                flux = np.sum(np.logical_xor(state, prev_state))
+            results["activity"].append(flux)
+            prev_state = state
+            
+            # 5. Heatmap Accumulation
+            results["heatmap"] += state.astype(int)
 
         # --- D. Post-Processing Analysis ---
         results["period"] = SimulationRunner.detect_period(timeline)
@@ -205,19 +253,24 @@ class SimulationRunner:
 def generate_report(data, output_folder):
     """
     Creates a detailed visual report and saves it to the disk.
+    Includes Population, Trajectory, Entropy, Activity, and Heatmaps.
     """
     name = data["config"]["name"]
     filename = os.path.join(output_folder, f"report_{name}.png")
     
-    # Create a figure with a grid layout (GridSpec is great for custom layouts)
-    fig = plt.figure(figsize=(14, 8))
-    gs = fig.add_gridspec(2, 2, width_ratios=[2, 1])
+    # Create a figure with a grid layout (2 rows, 3 columns)
+    # Col 1: Pop, Trajectory
+    # Col 2: Entropy/Activity, Heatmap
+    # Col 3: Stats
+    fig = plt.figure(figsize=(18, 10))
+    gs = fig.add_gridspec(2, 3, width_ratios=[1, 1, 0.4])
 
     # --- Plot 1: Population History (Top Left) ---
     ax_pop = fig.add_subplot(gs[0, 0])
-    ax_pop.plot(data["population"], color='#2E86C1', linewidth=2)
+    ax_pop.plot(data["population"], color='#2E86C1', linewidth=2, label='Alive Cells')
     ax_pop.set_title("Population Evolution", fontweight='bold')
-    ax_pop.set_ylabel("Alive Cells")
+    ax_pop.set_ylabel("Count")
+    ax_pop.legend(loc='upper right')
     ax_pop.grid(True, alpha=0.3)
 
     # --- Plot 2: Trajectory Map (Bottom Left) ---
@@ -238,9 +291,39 @@ def generate_report(data, output_folder):
     ax_traj.legend()
     ax_traj.grid(True, alpha=0.3)
 
-    # --- Panel 3: Technical Data Card (Right Column) ---
-    ax_info = fig.add_subplot(gs[:, 1])
+    # --- Plot 3: Entropy & Activity (Top Middle) ---
+    ax_ent = fig.add_subplot(gs[0, 1])
+    
+    # Dual axis
+    color_ent = 'tab:purple'
+    ax_ent.set_xlabel('Step')
+    ax_ent.set_ylabel('Shannon Entropy', color=color_ent)
+    ax_ent.plot(data["entropy"], color=color_ent, linewidth=2, linestyle='--')
+    ax_ent.tick_params(axis='y', labelcolor=color_ent)
+    ax_ent.set_title("Entropy & Activity (Flux)")
+    
+    ax_act = ax_ent.twinx()
+    color_act = 'tab:orange'
+    ax_act.set_ylabel('Activity (Flux)', color=color_act)
+    ax_act.plot(data["activity"], color=color_act, linewidth=2, alpha=0.7)
+    ax_act.tick_params(axis='y', labelcolor=color_act)
+
+    # --- Plot 4: Occupancy Heatmap (Bottom Middle) ---
+    ax_heat = fig.add_subplot(gs[1, 1])
+    
+    # Use log scale if there's huge variance, but linear is usually fine for short runs
+    # Adding 1 to avoid log(0) issues if using LogNorm, but let's stick to linear for now.
+    im = ax_heat.imshow(data["heatmap"], cmap='hot', interpolation='nearest')
+    ax_heat.set_title("Occupancy Heatmap")
+    fig.colorbar(im, ax=ax_heat, fraction=0.046, pad=0.04)
+
+    # --- Panel 5: Technical Data Card (Right Column) ---
+    ax_info = fig.add_subplot(gs[:, 2])
     ax_info.axis('off')
+    
+    # Calculate new stats
+    peak_entropy = max(data["entropy"]) if data["entropy"] else 0
+    avg_activity = np.mean(data["activity"]) if data["activity"] else 0
     
     # Construct the text block
     cfg = data["config"]
@@ -255,7 +338,9 @@ def generate_report(data, output_folder):
         f"STATISTICS:\n"
         f"• Initial Pop: {data['population'][0]}\n"
         f"• Final Pop: {data['population'][-1]}\n"
-        f"• Peak Occupancy: {max(data['occupancy'])*100:.2f}%\n\n"
+        f"• Peak Occupancy: {max(data['occupancy'])*100:.2f}%\n"
+        f"• Peak Entropy: {peak_entropy:.2f}\n"
+        f"• Avg Activity: {avg_activity:.1f} cells/step\n\n"
         f"PHYSICS ANALYSIS:\n"
         f"• Period Detected: {data['period'] if data['period'] > 0 else 'None'}\n"
         f"• Net Displacement: {data['displacement']:.2f} px\n"
@@ -264,7 +349,7 @@ def generate_report(data, output_folder):
     
     # Add text box
     ax_info.text(0.05, 0.95, text_content, 
-                 fontsize=12, family='monospace', verticalalignment='top',
+                 fontsize=11, family='monospace', verticalalignment='top',
                  bbox=dict(boxstyle="round,pad=1", facecolor="#F8F9F9", edgecolor="#B2BABB"))
 
     # Save and Close
