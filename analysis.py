@@ -287,7 +287,7 @@ def generate_report(data, output_folder):
     ax_traj.set_title("Center of Mass Trajectory")
     ax_traj.set_xlabel("Grid Column")
     ax_traj.set_ylabel("Grid Row")
-    ax_traj.invert_yaxis() # Important for matrix visualization
+    ax_traj.invert_yaxis() # Important for matrix visualization -> index (0,0) is top-left
     ax_traj.legend()
     ax_traj.grid(True, alpha=0.3)
 
